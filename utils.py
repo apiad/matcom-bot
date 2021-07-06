@@ -12,7 +12,7 @@ def get_general_chats():
 
 def get_specific_chats(text:str):
     result = ""
-    with open("chats_info.json") as info:
+    with open("chats_info.json", encoding= "utf-8") as info:
         data = load(info)
         result += data[0][text] + "\n"
         result += "\n".join(data[2][text])
