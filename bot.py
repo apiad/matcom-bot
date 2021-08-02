@@ -2,7 +2,7 @@ import pyrogram
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from pyrogram.raw.types.bot_command import BotCommand
-from utils import get_specific_chats, get_general_chats, get_commands_info
+from utils import *
 
 
 bot = pyrogram.Client("matcom-bot", bot_token=open("token").read())
@@ -14,6 +14,7 @@ info_cmd = BotCommand(command = "info", description = "Show official chats")
 
 cmds_list = [start_cmd, info_cmd]
 
+#region Commands
 
 @bot.on_message(filters.command(['start']))
 def send_welcome(client, message: pyrogram.types.Message):
@@ -24,6 +25,7 @@ def send_welcome(client, message: pyrogram.types.Message):
         disable_web_page_preview=True
     )
     
+
 @bot.on_message(filters.command(['help']))
 def send_commands_info(client, message: pyrogram.types.Message):
     
@@ -37,7 +39,7 @@ def send_commands_info(client, message: pyrogram.types.Message):
 
 
 @bot.on_message(filters.command(['info']))
-def show_channels(client, message:pyrogram.types.Message):
+def show_channels(client, message: pyrogram.types.Message):
     text = message.text.split()
     if(len(text) == 1):
         bot.send_message(
@@ -67,8 +69,37 @@ def show_channels(client, message:pyrogram.types.Message):
         )
 
 
+@bot.on_message(filters.command(['authenticate']))
+def authenticate_user(client, message: pyrogram.types.Message):
+    if check_status("authenticated", message.from_user.id):
+        bot.send_message(
+        message.chat.id,
+        "Usted ya se encuentra autenticado",
+        disable_web_page_preview=True
+        )
+    elif check_status("pending", message.from_user.id):
+        bot.send_message(
+        message.chat.id,
+        "Su autenticación está pendiente, por favor escriba el código que fue enviado a su correo",
+        disable_web_page_preview=True
+        )
+    else:
+        bot.send_message(
+        message.chat.id,
+        "Por favor proporcione su dirección de correo de MATCOM",
+        disable_web_page_preview=True
+        )
+
+#endregion
+
+#region
+
+#endregion
+
+#region CallbackQueries
+
 @bot.on_callback_query(filters.regex("^(cc|m)$"))
-def info_answer(client, callback_query:CallbackQuery):
+def info_answer(client, callback_query: CallbackQuery):
     if(callback_query.data == "cc"):
         bot.send_message(
             callback_query.message.chat.id,
@@ -132,13 +163,14 @@ def info_answer(client, callback_query:CallbackQuery):
 
 
 @bot.on_callback_query(filters.regex("^(cc[1234]|mm[1234])$"))
-def year_info(client, callback_query:CallbackQuery):
+def year_info(client, callback_query: CallbackQuery):
     bot.send_message(
         callback_query.message.chat.id,
         get_specific_chats(callback_query.data),
         disable_web_page_preview= True
     )
-    
+  
+#endregion  
 
 bot.start()
 pyrogram.idle()
