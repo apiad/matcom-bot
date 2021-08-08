@@ -1,6 +1,9 @@
 from json import load
+from os import read
 from pyrogram.raw.types.bot_command import BotCommand
+from pyrogram.types import Message
 from typing import List
+from random import randint
 import smtplib
 
 
@@ -11,6 +14,10 @@ def get_general_chats():
         data = load(info)
         groups_channels += "\n".join(data[1])
     return groups_channels
+
+
+def is_private(message: Message):
+    return message.chat.type == 'private'
 
 
 def get_specific_chats(text: str):
@@ -33,3 +40,26 @@ def check_status(status_name:str, user_id: int):
     with open("users_status.json", encoding= "utf-8") as info:
         status = load(info)
         return user_id in status[status_name]
+
+
+def send_email(address: str):
+    email_user , email_password = '', ''
+    
+    with open('email') as email:
+        config = email.read().split('\n')
+        email_user, email_password = config[0], config[1]
+
+    code = randint(100000, 1000000)
+    
+    email_text = ("Usted ha solicitado autenticarse en el bot oficial de la Facultad de Matemática y Computación.\n"
+            "El siguiente código es de uso único y exclusivo.\n\n"
+            f"Código:{code}")
+            
+    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+    server.ehlo()
+    server.login(email_user, email_password)
+    server.sendmail(email_user, address, email_text.encode('utf-8'))
+    server.close()
+    
+    return code
+        

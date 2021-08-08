@@ -19,24 +19,38 @@ cmds_list = [start_cmd, info_cmd]
 @bot.on_message(filters.command(['start']))
 def send_welcome(client, message: pyrogram.types.Message):
 
-    bot.send_message(
-        message.chat.id,
-        "🖖 Hola! Bienvenido al chatbot de MatCom!",
-        disable_web_page_preview=True
-    )
-    
+    if is_private(message):
+        bot.send_message(
+            message.chat.id,
+            "🖖 Hola! Bienvenido al chatbot de MatCom!",
+            disable_web_page_preview=True
+        )
+    else:
+        bot.send_message(
+            message.chat.id,
+            "Este comando no está disponible en este chat",
+            disable_web_page_preview=True
+        )
+        
 
 @bot.on_message(filters.command(['help']))
 def send_commands_info(client, message: pyrogram.types.Message):
     
-    cmds = get_commands_info(cmds_list)
+    if is_private(message):
+        cmds = get_commands_info(cmds_list)
+        
+        bot.send_message(
+            message.chat.id,
+            cmds,
+            disable_web_page_preview=True
+        )
+    else:
+        bot.send_message(
+            message.chat.id,
+            "Este comando no está disponible en este chat",
+            disable_web_page_preview=True
+        )
     
-    bot.send_message(
-        message.chat.id,
-        cmds,
-        disable_web_page_preview=True
-    )
-
 
 @bot.on_message(filters.command(['info']))
 def show_channels(client, message: pyrogram.types.Message):
@@ -71,28 +85,46 @@ def show_channels(client, message: pyrogram.types.Message):
 
 @bot.on_message(filters.command(['authenticate']))
 def authenticate_user(client, message: pyrogram.types.Message):
-    if check_status("authenticated", message.from_user.id):
-        bot.send_message(
-        message.chat.id,
-        "Usted ya se encuentra autenticado",
-        disable_web_page_preview=True
-        )
-    elif check_status("pending", message.from_user.id):
-        bot.send_message(
-        message.chat.id,
-        "Su autenticación está pendiente, por favor escriba el código que fue enviado a su correo",
-        disable_web_page_preview=True
-        )
+    if is_private(message):
+        if check_status("authenticated", message.from_user.id):
+            bot.send_message(
+            message.chat.id,
+            "Usted ya se encuentra autenticado",
+            disable_web_page_preview=True
+            )
+        elif check_status("pending", message.from_user.id):
+            bot.send_message(
+            message.chat.id,
+            "Su autenticación está pendiente, por favor escriba el código que fue enviado a su correo",
+            disable_web_page_preview=True
+            )
+        else:
+            bot.send_message(
+            message.chat.id,
+            "Por favor proporcione su dirección de correo de MATCOM",
+            disable_web_page_preview=True
+            )
     else:
         bot.send_message(
-        message.chat.id,
-        "Por favor proporcione su dirección de correo de MATCOM",
-        disable_web_page_preview=True
+            message.chat.id,
+            "Este comando no está disponible en este chat",
+            disable_web_page_preview=True
         )
 
 #endregion
 
 #region
+
+@bot.on_message(filters.regex("(@estudiantes.matcom.uh.cu|@matcom.uh.cu)"))
+def send_code(client, message: pyrogram.types.Message):
+    
+    send_email(message.text)
+    
+    bot.send_message(
+        message.chat.id,
+        "Se ha enviado un código de verificación a su dirección de correo, por favor escriba el código aquí.",
+        disable_web_page_preview=True
+        )
 
 #endregion
 
