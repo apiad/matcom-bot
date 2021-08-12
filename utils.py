@@ -1,5 +1,5 @@
-from json import load
-from os import read
+from json import load, dump
+from pyrogram.filters import user
 from pyrogram.raw.types.bot_command import BotCommand
 from pyrogram.types import Message
 from typing import List
@@ -42,7 +42,24 @@ def check_status(status_name:str, user_id: int):
         return user_id in status[status_name]
 
 
-def send_email(address: str):
+def add_status(user_id: int, status: str, code: int = 0, email: str = None):
+    
+    data = None
+    
+    with open('users_status.json', mode = 'r', encoding = 'utf-8') as fd:
+        data = load(fd)
+    
+    with open('users_status.json', mode = 'w+', encoding = 'utf-8') as fd:
+        if status == 'started':
+            data[status].append(user_id)
+        elif status == 'pending':
+            data[status].append({user_id: [code, email]})
+        elif status == 'authenticated':
+            data[status].append({user_id: email})
+        dump(data, fd, indent = 4)
+
+
+def send_code(address: str):
     email_user , email_password = '', ''
     
     with open('email') as email:
@@ -62,4 +79,17 @@ def send_email(address: str):
     server.close()
     
     return code
+ 
+
+def check_authentication(user_id: int, code: int):
+    
+    data = None
+    values = None
+    
+    with open('users_status', 'r', encoding= 'utf-8') as fd:
+        data: dict = load(fd) 
+
+        values = data.pop(user_id)
+        dump(data, fd)
         
+    return values, values[0] == code
