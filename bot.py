@@ -1,6 +1,6 @@
 import pyrogram
-from pyrogram import filters
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
+from pyrogram import filters, Client
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Message
 from pyrogram.raw.types.bot_command import BotCommand
 from utils import *
 
@@ -17,7 +17,7 @@ cmds_list = [start_cmd, info_cmd]
 #region Commands
 
 @bot.on_message(filters.command(['start']))
-def send_welcome(client, message: pyrogram.types.Message):
+def send_welcome(client: Client, message: Message):
 
     if is_private(message):
         if check_status('started', message.from_user.id):
@@ -46,7 +46,7 @@ def send_welcome(client, message: pyrogram.types.Message):
         
 
 @bot.on_message(filters.command(['help']))
-def send_commands_info(client, message: pyrogram.types.Message):
+def send_commands_info(client: Client, message: Message):
     
     if is_unauthorized(message):
         return
@@ -70,7 +70,7 @@ def send_commands_info(client, message: pyrogram.types.Message):
     
 
 @bot.on_message(filters.command(['info']))
-def show_channels(client, message: pyrogram.types.Message):
+def show_channels(client: Client, message: Message):
     
     if is_unauthorized(message):
         return
@@ -105,7 +105,7 @@ def show_channels(client, message: pyrogram.types.Message):
 
 
 @bot.on_message(filters.command(['authenticate']))
-def authenticate_user(client, message: pyrogram.types.Message):
+def authenticate_user(client: Client, message: Message):
     if is_private(message):
         if check_status('authenticated', message.from_user.id):
             bot.send_message(
@@ -132,12 +132,46 @@ def authenticate_user(client, message: pyrogram.types.Message):
             disable_web_page_preview=True
         )
 
+
+@bot.on_message(filters.command(['notify']))
+def notify_users(client: Client, message: Message):
+    
+    if is_private(message):
+        bot.send_message(
+            message.chat.id,
+            'Este comando no está disponible en este chat.',
+            disable_web_page_preview=True
+        )
+        return
+    
+    chat_text = ('Por favor, todos los integrantes del chat, '
+                f'favor de registrarse en este bot en caso de no estarlo \n {message}\n. '
+                'De no hacerlo en un tiempo será eliminado de este grupo por '
+                'nuevas políticas de los administradores.')
+    
+    bot.send_message(
+            message.chat.id,
+            chat_text,
+            disable_web_page_preview=True
+        )
+
+
+@bot.on_message(filters.command(['delete_users']))
+def delete_users(client: Client, message: Message):
+
+    for member in client.iter_chat_member(message.chat.id):
+        if not ( member.user.is_bot and member.user.is_owner):
+            if check_status('authenticated', member.user.id):
+                client.kick_chat_member(message.chat.id, member.user.id)
+
+        
+        
 #endregion
 
 #region
 
 @bot.on_message(filters.regex('(@estudiantes.matcom.uh.cu|@matcom.uh.cu)'))
-def send_email(client, message: pyrogram.types.Message):
+def send_email(client: Client, message: Message):
     
     code = send_code(message.text)
     
@@ -151,7 +185,7 @@ def send_email(client, message: pyrogram.types.Message):
     
 
 @bot.on_message(filters.regex('[0-9]{6}'))
-def validate_authentication(client, message: pyrogram.types.Message):
+def validate_authentication(client: Client, message: Message):
     
     values, status = check_authentication(message.from_user.id, int(message.text))
     if status:
@@ -171,7 +205,7 @@ def validate_authentication(client, message: pyrogram.types.Message):
         )   
 
 
-def is_unauthorized(message: pyrogram.types.Message):
+def is_unauthorized(message: Message):
     
     status = not check_status('authenticated', message.from_user.id)
     
@@ -188,7 +222,7 @@ def is_unauthorized(message: pyrogram.types.Message):
 #region CallbackQueries
 
 @bot.on_callback_query(filters.regex('^(cc|m)$'))
-def info_answer(client, callback_query: CallbackQuery):
+def info_answer(client: Client, callback_query: CallbackQuery):
     if(callback_query.data == 'cc'):
         bot.send_message(
             callback_query.message.chat.id,
@@ -251,8 +285,8 @@ def info_answer(client, callback_query: CallbackQuery):
         )   
 
 
-@bot.on_callback_query(filters.regex('^(cc[1234]|mm[1234])$'))
-def year_info(client, callback_query: CallbackQuery):
+@bot.on_callback_query(filters.regex('^(cc[1234]|m[1234])$'))
+def year_info(client: Client, callback_query: CallbackQuery):
     bot.send_message(
         callback_query.message.chat.id,
         get_specific_chats(callback_query.data),
