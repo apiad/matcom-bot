@@ -17,7 +17,7 @@ cmds_list = [start_cmd, info_cmd]
 
 #region Commands
 
-@bot.on_message(filters.command(['start']))
+@bot.on_message(filters.command(['start'])) #finished
 def send_welcome(client: Client, message: Message):
 
     if is_private(message):
@@ -46,7 +46,7 @@ def send_welcome(client: Client, message: Message):
     )
         
 
-@bot.on_message(filters.command(['help']))
+@bot.on_message(filters.command(['help'])) #finished
 def send_commands_info(client: Client, message: Message):
     
     if is_unauthorized(message):
@@ -70,10 +70,19 @@ def send_commands_info(client: Client, message: Message):
     )
     
 
-@bot.on_message(filters.command(['info']))
+@bot.on_message(filters.command(['info'])) #finished
 def show_channels(client: Client, message: Message):
     
     if is_unauthorized(message):
+        return
+    
+    if not is_private(message):
+        bot.send_message(
+            message.chat.id,
+            'Este comando no está disponible en este chat.',
+            disable_web_page_preview=True
+        )
+        
         return
     
     text = message.text.split()
@@ -105,7 +114,7 @@ def show_channels(client: Client, message: Message):
         )
 
 
-@bot.on_message(filters.command(['authenticate']))
+@bot.on_message(filters.command(['authenticate'])) #finished
 def authenticate_user(client: Client, message: Message):
     if is_private(message):
         if check_status('authenticated', message.from_user.id):
@@ -134,13 +143,21 @@ def authenticate_user(client: Client, message: Message):
         )
 
 
-@bot.on_message(filters.command(['notify']))
+@bot.on_message(filters.command(['notify'])) #finished
 def notify_users(client: Client, message: Message):
     
     if is_private(message):
         bot.send_message(
             message.chat.id,
             'Este comando no está disponible en este chat.',
+            disable_web_page_preview=True
+        )
+        return
+    
+    if not is_admin(message.chat.id, message.from_user.id):
+        bot.send_message(
+            message.chat.id,
+            'Usted no puede usar este comando.',
             disable_web_page_preview=True
         )
         return
@@ -157,17 +174,49 @@ def notify_users(client: Client, message: Message):
         )
 
 
-@bot.on_message(filters.command(['delete_users']))
+@bot.on_message(filters.command(['delete_users'])) #finished
 def delete_users(client: Client, message: Message):
+    
+    if is_private(message):
+            
+        bot.send_message(
+            message.chat.id,
+            'Este comando no está disponible en este chat.',
+            disable_web_page_preview=True
+        )
+        
+        return
+
+    admins = bot.get_chat_members(message.chat.id, filter = 'administrators')
+    
+    if not is_admin(message.chat.id, message.from_user.id, admins):
+        bot.send_message(
+            message.chat.id,
+            'Usted no puede usar este comando.',
+            disable_web_page_preview=True,
+        )
+        
+        return
 
     for member in bot.iter_chat_members(message.chat.id):
-        if not ( member.user.is_bot and member.user.is_owner):
-            if check_status('authenticated', member.user.id):
+        if not (member in admins or member.user.is_bot):
+            if not check_status('authenticated', member.user.id):
                 bot.kick_chat_member(message.chat.id, member.user.id)
 
 
-@bot.on_message(filters.command(['clear']))
+@bot.on_message(filters.command(['clear'])) #finished
 def clear_chat(client: Client, message: Message):
+    
+    if is_private(message):
+            
+        bot.send_message(
+            message.chat.id,
+            'Este comando no está disponible en este chat.',
+            disable_web_page_preview=True
+        )
+        
+        return
+            
     
     admins = bot.get_chat_members(message.chat.id, filter = 'administrators')
     
