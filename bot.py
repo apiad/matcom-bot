@@ -1,7 +1,8 @@
 import pyrogram
 from pyrogram import filters, Client
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Message
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Message, ChatMember
 from pyrogram.raw.types.bot_command import BotCommand
+from typing import List
 from utils import *
 
 
@@ -145,7 +146,7 @@ def notify_users(client: Client, message: Message):
         return
     
     chat_text = ('Por favor, todos los integrantes del chat, '
-                f'favor de registrarse en este bot en caso de no estarlo \n {message}\n. '
+                f'favor de registrarse en este bot en caso de no estarlo. '
                 'De no hacerlo en un tiempo será eliminado de este grupo por '
                 'nuevas políticas de los administradores.')
     
@@ -159,12 +160,29 @@ def notify_users(client: Client, message: Message):
 @bot.on_message(filters.command(['delete_users']))
 def delete_users(client: Client, message: Message):
 
-    for member in client.iter_chat_member(message.chat.id):
+    for member in bot.iter_chat_members(message.chat.id):
         if not ( member.user.is_bot and member.user.is_owner):
             if check_status('authenticated', member.user.id):
-                client.kick_chat_member(message.chat.id, member.user.id)
+                bot.kick_chat_member(message.chat.id, member.user.id)
 
+
+@bot.on_message(filters.command(['clear']))
+def clear_chat(client: Client, message: Message):
+    
+    admins = bot.get_chat_members(message.chat.id, filter = 'administrators')
+    
+    if not is_admin(message.chat.id, message.from_user.id, admins):
+        bot.send_message(
+            message.chat.id,
+            'Usted no puede usar este comando.',
+            disable_web_page_preview=True,
+        )
         
+        return
+    
+    for member in bot.iter_chat_members(message.chat.id):
+        if not (member in admins or member.user.is_bot):
+            bot.kick_chat_member(message.chat.id, member.user.id)
         
 #endregion
 
@@ -216,6 +234,18 @@ def is_unauthorized(message: Message):
             disable_web_page_preview=True
         )
     return status
+
+
+def is_admin(chat_id: int, user_id: int, admins: List[ChatMember] = None):
+    
+    if admins == None:
+        admins = bot.get_chat_members(chat_id, filter = 'administrators')
+    
+    for i in admins:
+        if i.user.id == user_id:
+            return True
+    
+    return False
 
 #endregion
 
