@@ -232,7 +232,7 @@ def clear_chat(client: Client, message: Message):
     for member in bot.iter_chat_members(message.chat.id):
         if not (member in admins or member.user.is_bot):
             bot.kick_chat_member(message.chat.id, member.user.id)
-        
+
 #endregion
 
 #region
@@ -271,6 +271,23 @@ def validate_authentication(client: Client, message: Message):
             disable_web_page_preview=True,
         )   
 
+
+@bot.on_message(filters.regex("#doc")) #finished
+def pin_document(client: Client, message: Message):
+    
+    if (not is_private(message)) and is_admin(message.chat.id, message.from_user.id):
+        message.pin()
+        
+        
+@bot.on_message(filters.regex("#info")) #finished
+def pin_document(client: Client, message: Message):
+    
+    if (not is_private(message)) and is_admin(message.chat.id, message.from_user.id):
+        message.pin()
+
+#endregion
+
+#region Auxiliary Functions
 
 def is_unauthorized(message: Message):
     
