@@ -11,9 +11,16 @@ bot = pyrogram.Client('matcom-bot', bot_token=open('token').read())
 
 start_cmd = BotCommand(command = 'start', description = 'Start the bot')
 info_cmd = BotCommand(command = 'info', description = 'Show official chats')
+help_cmd = BotCommand(command = 'help', description ='Show avaiable commands')
+authenticate_cmd = BotCommand(command = 'authenticate', description ='Register a user in the bot')
+
+notify_cmd = BotCommand(command = 'notify', description = 'Alert users to authenticate immediately')
+kick_users_cmd = BotCommand(command = 'kick_users', description = 'Kick non-authenticate users')
+clear_cmd = BotCommand(command = 'clear', description = 'Clear a group-channel')
 
 
-cmds_list = [start_cmd, info_cmd]
+pv_cmds = [start_cmd, info_cmd, help_cmd, authenticate_cmd]
+group_cmds = [notify_cmd, kick_users_cmd, clear_cmd, help_cmd]
 
 #region Commands
 
@@ -52,20 +59,18 @@ def send_commands_info(client: Client, message: Message):
     if is_unauthorized(message):
         return
     
+    cmds = []
+    
     if is_private(message):
             
-        cmds = get_commands_info(cmds_list)
+        cmds = get_commands_info(pv_cmds)
+    else:
         
-        bot.send_message(
-            message.chat.id,
-            cmds,
-            disable_web_page_preview=True
-        )
-        return
+        cmds = get_commands_info(group_cmds)
         
     bot.send_message(
         message.chat.id,
-        'Este comando no está disponible en este chat.',
+        cmds,
         disable_web_page_preview=True
     )
     
@@ -174,7 +179,7 @@ def notify_users(client: Client, message: Message):
         )
 
 
-@bot.on_message(filters.command(['delete_users'])) #finished
+@bot.on_message(filters.command(['kick_users'])) #finished
 def delete_users(client: Client, message: Message):
     
     if is_private(message):
