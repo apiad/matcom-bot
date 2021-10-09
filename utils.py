@@ -44,6 +44,8 @@ def check_status(status_name:str, user_id: int):
 
 def add_status(user_id: int, status: str, code: int = 0, email: str = None):
     
+    student = 'estudiantes' in email.split(['.', '@'])
+    
     data = None
     
     with open('users_status.json', mode = 'r', encoding = 'utf-8') as fd:
@@ -55,7 +57,10 @@ def add_status(user_id: int, status: str, code: int = 0, email: str = None):
         elif status == 'pending':
             data[status].append({user_id: [code, email]})
         elif status == 'authenticated':
-            data[status].append({user_id: email})
+            if student:
+                data[status].append({user_id: [email, 'estudiante']})
+            else:
+                data[status].append({user_id: [email, 'profesor']})
         dump(data, fd, indent = 4)
 
 
@@ -79,7 +84,7 @@ def send_code(address: str):
     server.close()
     
     return code
- 
+
 
 def check_authentication(user_id: int, code: int):
     
