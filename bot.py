@@ -28,21 +28,11 @@ group_cmds = [notify_cmd, kick_users_cmd, clear_cmd, help_cmd]
 def send_welcome(client: Client, message: Message):
 
     if is_private(message):
-        if check_status('started', message.from_user.id):
-            
-            bot.send_message(
-                message.chat.id,
-                'Usted ya ha iniciado el bot.',
-                disable_web_page_preview=True
-            )
-        else:        
-            bot.send_message(
-                message.chat.id,
-                '🖖 Hola! Bienvenido al chatbot de MatCom!',
-                disable_web_page_preview=True
-            )
-            
-            add_status(message.from_user.id, 'started')
+        bot.send_message(
+            message.chat.id,
+            '🖖 Hola! Bienvenido al chatbot de MatCom!',
+            disable_web_page_preview=True
+        )
         
         return
         

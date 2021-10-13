@@ -52,11 +52,9 @@ def add_status(user_id: int, status: str, code: int = 0, email: str = None):
         data = load(fd)
     
     with open('users_status.json', mode = 'w+', encoding = 'utf-8') as fd:
-        if status == 'started':
-            data[status].append(user_id)
-        elif status == 'pending':
+        if status == 'pending':
             data[status].append({user_id: [code, email]})
-        elif status == 'authenticated':
+        else:
             if student:
                 data[status].append({user_id: [email, 'estudiante']})
             else:
