@@ -171,4 +171,3 @@ config.ini
 .vscode/settings.json
 .vscode/launch.json
 matcom-bot.session
-users_status.json
