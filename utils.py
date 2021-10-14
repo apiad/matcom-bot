@@ -53,12 +53,12 @@ def add_status(user_id: int, status: str, code: int = 0, email: str = None):
     
     with open('users_status.json', mode = 'w+', encoding = 'utf-8') as fd:
         if status == 'pending':
-            data[status].append({user_id: [code, email]})
+            data[status][user_id] = [code, email]
         else:
             if student:
-                data[status].append({user_id: [email, 'estudiante']})
+                data[status][user_id] = [email, 'estudiante']
             else:
-                data[status].append({user_id: [email, 'profesor']})
+                data[status][user_id] = [email, 'profesor']
         dump(data, fd, indent = 4)
 
 
