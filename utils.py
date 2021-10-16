@@ -44,7 +44,7 @@ def check_status(status_name:str, user_id: int):
 
 def add_status(user_id: int, status: str, code: int = 0, email: str = None):
     
-    student = 'estudiantes' in email.split(['.', '@'])
+    student = 'estudiantes' in email
     
     data = None
     
@@ -89,10 +89,12 @@ def check_authentication(user_id: int, code: int):
     data = None
     values = None
     
-    with open('users_status', 'r', encoding= 'utf-8') as fd:
-        data: dict = load(fd) 
+    with open('users_status.json', mode = 'r', encoding = 'utf-8') as fd:
+        data = load(fd)
+        
+    with open('users_status.json', mode = 'w+', encoding = 'utf-8') as fd:
 
-        values = data.pop(user_id)
-        dump(data, fd)
+        values = data['pending'].pop(str(user_id))
+        dump(data, fd, indent=4)
         
     return values, values[0] == code
