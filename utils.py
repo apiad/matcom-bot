@@ -16,10 +16,6 @@ def get_general_chats():
     return groups_channels
 
 
-def is_private(message: Message):
-    return message.chat.type == 'private'
-
-
 def get_specific_chats(text: str):
     result = ""
     with open("chats_info.json", encoding= "utf-8") as info:

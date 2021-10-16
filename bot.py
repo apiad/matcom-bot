@@ -8,7 +8,7 @@ from utils import *
 
 bot = pyrogram.Client('matcom-bot', bot_token=open('token').read())
 
-
+#region Commands description
 start_cmd = BotCommand(command = 'start', description = 'Start the bot')
 info_cmd = BotCommand(command = 'info', description = 'Show official chats')
 help_cmd = BotCommand(command = 'help', description ='Show avaiable commands')
@@ -18,9 +18,9 @@ notify_cmd = BotCommand(command = 'notify', description = 'Alert users to authen
 kick_users_cmd = BotCommand(command = 'kick_users', description = 'Kick non-authenticate users')
 clear_cmd = BotCommand(command = 'clear', description = 'Clear a group-channel')
 
-
 pv_cmds = [start_cmd, info_cmd, help_cmd, authenticate_cmd]
 group_cmds = [notify_cmd, kick_users_cmd, clear_cmd, help_cmd]
+#endregion
 
 #region Commands
 
@@ -307,6 +307,10 @@ def is_admin(chat_id: int, user_id: int, admins: List[ChatMember] = None):
             return True
     
     return False
+
+
+def is_private(message: Message):
+    return message.chat.type == 'private'
 
 #endregion
 
