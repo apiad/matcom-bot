@@ -228,6 +228,40 @@ def clear_chat(client: Client, message: Message):
         if not (member in admins or member.user.is_bot):
             bot.kick_chat_member(message.chat.id, member.user.id)
 
+
+@bot.on_message(filters.command(['who'])) #finished
+def whose_message(client: Client, message: Message):
+    
+    user_id =bot.get_users(message.text.split()[1]).id
+    
+    if is_private(message):
+        bot.send_message(
+            message.chat.id,
+            'Este comando no está disponible en este chat.',
+            disable_web_page_preview=True
+        )
+        return
+    
+    if not check_status('authenticated', user_id):
+        bot.send_message(
+            message.chat.id,
+            'Este usuario debe autenticarse.',
+            disable_web_page_preview=True
+        )
+        return
+    
+    values = get_user_info(user_id)
+    info = (f'Nombre: {message.from_user.first_name}\n'
+            f'Alias: {message.from_user.username}\n'
+            f'Es: {values[1]}\n'
+            f'Correo: {values[0]}')
+    
+    bot.send_message(
+            message.chat.id,
+            info,
+            disable_web_page_preview=True
+        )
+    
 #endregion
 
 #region

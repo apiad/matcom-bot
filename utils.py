@@ -6,7 +6,6 @@ from typing import List
 from random import randint
 import smtplib
 
-
 # Gets general chats
 def get_general_chats():
     groups_channels = "Canales y grupos oficiales de MATCOM\n\n"
@@ -35,7 +34,7 @@ def get_commands_info(cmds_list: List[BotCommand]):
 def check_status(status_name:str, user_id: int):
     with open("users_status.json", encoding= "utf-8") as info:
         status = load(info)
-        return user_id in status[status_name]
+        return str(user_id) in status[status_name]
 
 
 def add_status(user_id: int, status: str, code: int = 0, email: str = None):
@@ -78,6 +77,17 @@ def send_code(address: str):
     server.close()
     
     return code
+
+
+def get_user_info(user_id: int):
+    
+    data = None,
+    
+    with open('users_status.json', 'r', encoding = 'utf-8') as fd:
+        
+        data = load(fd)
+    
+    return data['authenticated'][str(user_id)]
 
 
 def check_authentication(user_id: int, code: int):
