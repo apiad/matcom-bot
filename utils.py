@@ -6,7 +6,6 @@ from typing import List
 from random import randint
 import smtplib
 
-
 # Gets general chats
 def get_general_chats():
     groups_channels = "Canales y grupos oficiales de MATCOM\n\n"
@@ -14,10 +13,6 @@ def get_general_chats():
         data = load(info)
         groups_channels += "\n".join(data[1])
     return groups_channels
-
-
-def is_private(message: Message):
-    return message.chat.type == 'private'
 
 
 def get_specific_chats(text: str):
@@ -39,10 +34,12 @@ def get_commands_info(cmds_list: List[BotCommand]):
 def check_status(status_name:str, user_id: int):
     with open("users_status.json", encoding= "utf-8") as info:
         status = load(info)
-        return user_id in status[status_name]
+        return str(user_id) in status[status_name]
 
 
 def add_status(user_id: int, status: str, code: int = 0, email: str = None):
+    
+    student = 'estudiantes' in email
     
     data = None
     
@@ -50,12 +47,13 @@ def add_status(user_id: int, status: str, code: int = 0, email: str = None):
         data = load(fd)
     
     with open('users_status.json', mode = 'w+', encoding = 'utf-8') as fd:
-        if status == 'started':
-            data[status].append(user_id)
-        elif status == 'pending':
-            data[status].append({user_id: [code, email]})
-        elif status == 'authenticated':
-            data[status].append({user_id: email})
+        if status == 'pending':
+            data[status][user_id] = [code, email]
+        else:
+            if student:
+                data[status][user_id] = [email, 'estudiante']
+            else:
+                data[status][user_id] = [email, 'profesor']
         dump(data, fd, indent = 4)
 
 
@@ -79,17 +77,30 @@ def send_code(address: str):
     server.close()
     
     return code
- 
+
+
+def get_user_info(user_id: int):
+    
+    data = None,
+    
+    with open('users_status.json', 'r', encoding = 'utf-8') as fd:
+        
+        data = load(fd)
+    
+    return data['authenticated'][str(user_id)]
+
 
 def check_authentication(user_id: int, code: int):
     
     data = None
     values = None
     
-    with open('users_status', 'r', encoding= 'utf-8') as fd:
-        data: dict = load(fd) 
+    with open('users_status.json', mode = 'r', encoding = 'utf-8') as fd:
+        data = load(fd)
+        
+    with open('users_status.json', mode = 'w+', encoding = 'utf-8') as fd:
 
-        values = data.pop(user_id)
-        dump(data, fd)
+        values = data['pending'].pop(str(user_id))
+        dump(data, fd, indent=4)
         
     return values, values[0] == code

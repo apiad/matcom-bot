@@ -8,12 +8,19 @@ from utils import *
 
 bot = pyrogram.Client('matcom-bot', bot_token=open('token').read())
 
-
+#region Commands description
 start_cmd = BotCommand(command = 'start', description = 'Start the bot')
 info_cmd = BotCommand(command = 'info', description = 'Show official chats')
+help_cmd = BotCommand(command = 'help', description ='Show avaiable commands')
+authenticate_cmd = BotCommand(command = 'authenticate', description ='Register a user in the bot')
 
+notify_cmd = BotCommand(command = 'notify', description = 'Alert users to authenticate immediately')
+kick_users_cmd = BotCommand(command = 'kick_users', description = 'Kick non-authenticate users')
+clear_cmd = BotCommand(command = 'clear', description = 'Clear a group-channel')
 
-cmds_list = [start_cmd, info_cmd]
+pv_cmds = [start_cmd, info_cmd, help_cmd, authenticate_cmd]
+group_cmds = [notify_cmd, kick_users_cmd, clear_cmd, help_cmd]
+#endregion
 
 #region Commands
 
@@ -21,21 +28,11 @@ cmds_list = [start_cmd, info_cmd]
 def send_welcome(client: Client, message: Message):
 
     if is_private(message):
-        if check_status('started', message.from_user.id):
-            
-            bot.send_message(
-                message.chat.id,
-                'Usted ya ha iniciado el bot.',
-                disable_web_page_preview=True
-            )
-        else:        
-            bot.send_message(
-                message.chat.id,
-                '🖖 Hola! Bienvenido al chatbot de MatCom!',
-                disable_web_page_preview=True
-            )
-            
-            add_status(message.from_user.id, 'started')
+        bot.send_message(
+            message.chat.id,
+            '🖖 Hola! Bienvenido al chatbot de MatCom!',
+            disable_web_page_preview=True
+        )
         
         return
         
@@ -52,20 +49,18 @@ def send_commands_info(client: Client, message: Message):
     if is_unauthorized(message):
         return
     
+    cmds = []
+    
     if is_private(message):
             
-        cmds = get_commands_info(cmds_list)
+        cmds = get_commands_info(pv_cmds)
+    else:
         
-        bot.send_message(
-            message.chat.id,
-            cmds,
-            disable_web_page_preview=True
-        )
-        return
+        cmds = get_commands_info(group_cmds)
         
     bot.send_message(
         message.chat.id,
-        'Este comando no está disponible en este chat.',
+        cmds,
         disable_web_page_preview=True
     )
     
@@ -174,7 +169,7 @@ def notify_users(client: Client, message: Message):
         )
 
 
-@bot.on_message(filters.command(['delete_users'])) #finished
+@bot.on_message(filters.command(['kick_users'])) #finished
 def delete_users(client: Client, message: Message):
     
     if is_private(message):
@@ -232,7 +227,41 @@ def clear_chat(client: Client, message: Message):
     for member in bot.iter_chat_members(message.chat.id):
         if not (member in admins or member.user.is_bot):
             bot.kick_chat_member(message.chat.id, member.user.id)
-        
+
+
+@bot.on_message(filters.command(['who'])) #finished
+def whose_message(client: Client, message: Message):
+    
+    user_id =bot.get_users(message.text.split()[1]).id
+    
+    if is_private(message):
+        bot.send_message(
+            message.chat.id,
+            'Este comando no está disponible en este chat.',
+            disable_web_page_preview=True
+        )
+        return
+    
+    if not check_status('authenticated', user_id):
+        bot.send_message(
+            message.chat.id,
+            'Este usuario debe autenticarse.',
+            disable_web_page_preview=True
+        )
+        return
+    
+    values = get_user_info(user_id)
+    info = (f'Nombre: {message.from_user.first_name}\n'
+            f'Alias: {message.from_user.username}\n'
+            f'Es: {values[1]}\n'
+            f'Correo: {values[0]}')
+    
+    bot.send_message(
+            message.chat.id,
+            info,
+            disable_web_page_preview=True
+        )
+    
 #endregion
 
 #region
@@ -272,6 +301,23 @@ def validate_authentication(client: Client, message: Message):
         )   
 
 
+@bot.on_message(filters.regex("#doc")) #finished
+def pin_document(client: Client, message: Message):
+    
+    if (not is_private(message)) and is_admin(message.chat.id, message.from_user.id):
+        message.pin()
+        
+        
+@bot.on_message(filters.regex("#info")) #finished
+def pin_document(client: Client, message: Message):
+    
+    if (not is_private(message)) and is_admin(message.chat.id, message.from_user.id):
+        message.pin()
+
+#endregion
+
+#region Auxiliary Functions
+
 def is_unauthorized(message: Message):
     
     status = not check_status('authenticated', message.from_user.id)
@@ -295,6 +341,10 @@ def is_admin(chat_id: int, user_id: int, admins: List[ChatMember] = None):
             return True
     
     return False
+
+
+def is_private(message: Message):
+    return message.chat.type == 'private'
 
 #endregion
 
